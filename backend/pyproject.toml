@@ -1,0 +1,17 @@
+[project]
+name = "flowpay-backend"
+version = "0.1.0"
+description = "FlowPay — AI payments ops agent backend"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "gspread>=6.1.0",
+    "google-auth>=2.36.0",
+    "pydantic[email]>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "python-dotenv>=1.0.0",
+    "razorpay>=1.4.0",
+    "apscheduler>=3.10.0,<4.0.0",
+]
