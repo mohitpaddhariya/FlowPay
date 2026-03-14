@@ -122,3 +122,48 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -d ''
 ```
+
+---
+
+## 6. AI Agent Chat (Post-Phase 2)
+
+### 6a. Direct Payment Link Request (Streaming)
+This hits the LangGraph `StateGraph`, sending back live Server-Sent Events (SSE) as the LLM calls the tools and formulates a response.
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8000/chat' \
+  -H 'accept: text/event-stream' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "message": "Hey FlowPay! Collect ₹500 from Mohit Paddhariya (mohit.paddhariya@gmail.com) for Web Design. Due tomorrow.",
+  "thread_id": "test-session-1"
+}'
+```
+
+### 6b. Missing Information Request (Memory Check)
+If you ask for a payment without an email, it will ask for one. When you reply in the same thread, it remembers who you are talking about.
+
+**Step 1: Ask for payment (Agent will pause and ask for Email)**
+```bash
+curl -X 'POST' \
+  'http://localhost:8000/chat' \
+  -H 'accept: text/event-stream' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "message": "Hey FlowPay! Collect ₹500 from Pooja for Web Design. Due tomorrow.",
+  "thread_id": "test-session-2"
+}'
+```
+
+**Step 2: Reply to the Agent (Keep the exact same `thread_id`!)**
+```bash
+curl -X 'POST' \
+  'http://localhost:8000/chat' \
+  -H 'accept: text/event-stream' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "message": "Her email is pooja@example.com",
+  "thread_id": "test-session-2"
+}'
+```

@@ -1,63 +1,55 @@
 # AI Context
 
-*This document serves as the "System State" for LLM agents working on this repository.*
+*System context for LLM agents and developers working on this repository.*
 
 ## 1. Project Goal
-Build an AI agent (using LangGraph) that handles end-to-end payment operations (CRM lookup, Razorpay links, Emailing, and Reminders) using natural language instructions.
+FlowPay is an AI agent (LangGraph + Gemini 2.0 Flash) that handles end-to-end payment operations via natural language. It manages CRM contacts, Razorpay payment links, email dispatch, and reminders — all from a single conversational interface.
 
 ## 2. Current State
-**Phase 1 (Tool Building) is COMPLETE.** All backend APIs required for the agent to function are built, tested, and wired together.
+**Phase 1 (Tool Building) ✅ and Phase 2 (AI Orchestration) ✅ are COMPLETE.**
 
-## 3. Available Tools for LangGraph
-The following modules exist in `app/services/` and are exposed via `app/routers/`. The LangGraph agent should wrap these APIs/Services into `ToolNode` instances.
+The LangGraph agent is fully operational with 10 tools, SSE streaming, SQLite-backed conversation memory, and CRM-first verification logic.
 
-### A. Google Sheets (`app/services/sheets.py`)
-Acts as the CRM and Invoice Ledger.
-- `find_contact(name: str)`
-- `find_contact_by_email(email: str)`
-- `update_contact_by_name(name: str, data: ContactUpdate)`
-- `add_payment(data: PaymentCreate)`
+## 3. Agent Tools (10 Total)
 
-### B. Razorpay (`app/services/razorpay.py`)
-Handles payment generation and webhook fulfillment.
-- `POST /razorpay/payment-links` (Requires Name, Email, Amount, Description)
-  - *Note: This endpoint automatically handles sheet insertion and sending the initial email.*
-  - **NEW:** This endpoint accepts a `min_partial_amount` to allow customers to pay in installments. Usage of this should be exposed to the user as a capability.
+### CRM Tools (Google Sheets)
+| Tool | Purpose |
+|---|---|
+| `lookup_contact_tool` | Search CRM by name; returns all matches for disambiguation |
+| `update_contact_email_tool` | Upsert: updates existing contact or inserts new one |
+| `add_contact_tool` | Directly add a new contact |
+| `get_all_contacts_tool` | List all contacts |
+| `get_all_payments_tool` | List all payment records |
+| `find_payments_by_email_tool` | Find payments for a specific email |
 
-### C. Email (`app/services/email.py`)
-Handles manual interventions.
-- `POST /email/reminder` (Requires customer_email, reminder_level: 1, 2, or 3)
+### Payment Tools (Razorpay)
+| Tool | Purpose |
+|---|---|
+| `create_payment_link_tool` | Creates link, saves to Sheets, sends email (full business logic) |
+| `cancel_payment_link_tool` | Cancel an active payment link |
+| `sync_payment_link_tool` | Poll Razorpay for latest status and update CRM |
 
-### D. Automated Systems (Background)
-The LangGraph agent **does not need to worry about these**. They happen automatically:
-- **Receipts**: Sent automatically via Razorpay Webhook.
-- **Owner Summaries**: Sent automatically via Razorpay Webhook.
-- **Scheduled Reminders**: `APScheduler` runs hourly to send Day 3, 7, and 14 reminders for pending invoices.
+### Communication Tools (Email)
+| Tool | Purpose |
+|---|---|
+| `send_reminder_email_tool` | Send manual reminder (levels 1–3) for pending payments |
 
-## 4. Next Step: Phase 2 (Orchestration)
-We need to introduce LangGraph.
+## 4. Agent Behavior Rules
+1. **CRM-first verification**: Agent ALWAYS calls `lookup_contact_tool` before creating any payment link, even when the user provides both name and email.
+2. **Auto-upsert**: If a contact doesn't exist, it's added automatically via `update_contact_email_tool`.
+3. **Missing info pause**: Agent pauses and asks the user when email, description, or `min_partial_amount` is missing.
+4. **Date resolution**: Relative dates ("tomorrow", "in 3 days") are calculated from the system clock.
+5. **Disambiguation**: Multiple CRM matches trigger a clarification prompt.
+6. **Rate limit resilience**: Exponential backoff (2s → 4s → 8s) on 429 errors.
 
-**Proposed Agent State:**
-```python
-class AgentState(TypedDict):
-    messages: list[BaseMessage]
-    customer_name: str | None
-    customer_email: str | None
-    amount: float | None
-    description: str | None
-```
+## 5. Configuration UX
+- `GOOGLE_SHEET_ID` accepts either a full Google Sheets URL or a raw sheet ID (auto-parsed via Pydantic validator).
+- `GEMINI_API_KEY` is loaded from `.env` via `python-dotenv`.
 
-**Proposed Workflow:**
-1. User provides prompt: "Collect 500 from Mohit for March ops."
-2. **LLM Node** extracts intent and parameters.
-3. If email is missing, **Tool Node** hits Google Sheets `find_contact` to get it.
-4. If still missing, LLM pauses and asks user for email. Provide email via `update_contact_by_name`.
-5. Once all parameters (name, email, amount, description) are met, **Tool Node** calls `POST /razorpay/payment-links`.
-6. Agent replies: "Payment link created and emailed to Mohit."
+## 6. Automated Systems (No Agent Involvement)
+- **Receipts & Partial Payment Emails**: Triggered automatically by Razorpay webhooks.
+- **Owner Summaries**: Sent automatically when payments arrive.
+- **Scheduled Reminders**: APScheduler runs hourly (Day 3/7/14 escalation).
 
-## 5. Constraints
-- **Frameworks**: `fastapi`, `langgraph`, `langchain-google-genai` (Gemini 1.5/2.0 Pro).
-- Avoid creating new database systems; rely exclusively on the `GoogleSheetsService` for state tracking.
-
-## 6. Testing & Documentation
-All edge cases (partial payments, duplicate webhooks, Google API 500 errors) have been resolved. See `docs/CURL.md` for manual testing commands.
+## 7. Tech Stack
+`fastapi`, `langgraph`, `langchain-google-genai`, `langchain-core`, `langgraph-checkpoint-sqlite`, `aiosqlite`, `gspread`, `razorpay`, `pydantic-settings`, `apscheduler`

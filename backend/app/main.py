@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import contacts, payments, razorpay as razorpay_router, email as email_router
+from app.routers import contacts, payments, razorpay as razorpay_router, email as email_router, chat as chat_router
 from app.services.sheets import GoogleSheetsService
 from app.services.razorpay import RazorpayService
 from app.services.email import EmailService
@@ -72,7 +72,7 @@ app.include_router(contacts.router)
 app.include_router(payments.router)
 app.include_router(razorpay_router.router)
 app.include_router(email_router.router)
-
+app.include_router(chat_router.router)
 
 @app.get("/", tags=["Health"])
 def root():
