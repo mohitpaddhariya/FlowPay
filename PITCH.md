@@ -1,203 +1,202 @@
-# FlowPay — “It’s handled.”
+# FlowPay — *"It's handled."*
 
 ## One-Line Pitch
-FlowPay is an AI payments operations agent for small businesses.
-Instead of creating payment links, sending reminders, and tracking invoices manually,
-you simply tell FlowPay what you want done — and it handles the workflow end-to-end.
+
+FlowPay is an AI payments-ops agent that turns a single English sentence into a complete payment collection workflow — CRM lookup, Razorpay link, branded email, automated reminders, and real-time status tracking.
 
 ---
 
-# The Problem
+## The Problem
 
-Small businesses in India don’t lose money because customers refuse to pay.
-
+Small businesses in India don't lose money because customers refuse to pay.
 They lose time because **collecting payments is messy.**
 
-A typical workflow today looks like this:
+A typical workflow today:
 
 1. Search Google Sheets for the client
 2. Copy their contact details
 3. Create a Razorpay payment link
 4. Send the link via email or WhatsApp
-5. Track if the payment arrives
-6. Send reminder emails
-7. Update the sheet manually
+5. Track whether the payment arrives
+6. Send reminder emails manually
+7. Update the sheet when money lands
 
-For something as small as **₹1,500**, founders spend **30 minutes chasing the payment.**
+For something as small as **₹1,500**, founders spend **30 minutes chasing one payment.**
 
 Payment collection becomes an operational burden.
 
 ---
 
-# The Idea
+## The Solution
 
 What if collecting payments was **just one sentence?**
 
-Example instruction:
+> *"Collect ₹5,000 from Mohit for March subscription."*
 
-> Collect ₹1,500 from Mohit Paddhariya for March subscription.
-
-FlowPay turns that sentence into the **entire payment workflow.**
+FlowPay turns that sentence into the **entire payment workflow** — automatically.
 
 ---
 
-# What FlowPay Does
+## What FlowPay Does
 
 When the user gives an instruction, FlowPay:
 
-1. Understands the request using an LLM
-2. Looks up the client in Google Sheets
-3. Asks for missing details if needed
-4. Creates a Razorpay payment link
-5. Emails the client the payment link
-6. Tracks payment status
-7. Updates records when payment arrives
-8. Sends the owner a summary
+1. **Understands the request** — Gemini 2.5 Flash parses intent, amount, name, and description
+2. **Looks up the client** in Google Sheets via CRM tools
+3. **Asks for missing details** if needed (e.g. email) and saves them back
+4. **Creates a Razorpay payment link** (with optional partial-payment and due-date support)
+5. **Emails the client** a branded HTML invoice with the payment link
+6. **Tracks payment status** via Razorpay Webhooks in real time
+7. **Sends smart reminders** — Day 3 polite → Day 7 firm → Day 14 final notice
+8. **Handles partial payments** — detects them, updates the sheet, notifies the client of balance
+9. **Sends the owner a summary** email when payment is received
+10. **Remembers context** across messages — the conversational agent retains state per thread
 
-So instead of **doing the work manually**, the founder just **delegates it.**
-
-FlowPay behaves like a **payments operations assistant.**
+The founder just **delegates the task** — FlowPay **executes the entire workflow.**
 
 ---
 
-# Demo Flow
+## Live Demo Flow
 
 ### Step 1 — User Instruction
 
-User types:
+User types in the chat UI:
 
-Collect ₹1,500 from Mohit for March subscription.
+> *"Collect ₹5,000 from Mohit for March subscription."*
 
-FlowPay understands the intent.
+The streaming interface shows tool calls in real time as the agent works.
 
----
+### Step 2 — CRM Lookup
 
-### Step 2 — Data Lookup
+FlowPay checks Google Sheets for "Mohit."
 
-FlowPay checks Google Sheets for Mohit.
+If the email is missing, it asks:
+> *"I found Mohit but their email is missing. Could you provide it?"*
 
-If something is missing, it asks:
+Once provided, it saves the email to the CRM for future reference.
 
-"Email for Mohit is missing. Please provide it."
+### Step 3 — Payment Link Created
 
-Once provided, it saves the data back to the sheet.
-
----
-
-### Step 3 — Payment Link
-
-FlowPay creates a Razorpay payment link automatically.
-
----
+FlowPay calls the Razorpay API and creates a payment link automatically.
+The link, along with its ID and URL, is recorded in the Payments sheet.
 
 ### Step 4 — Email Sent
 
-FlowPay sends the client an email with the payment link.
-
----
+FlowPay sends the client a branded HTML email containing the payment link, amount, description, and due date.
 
 ### Step 5 — Payment Tracking
 
-FlowPay monitors payment status.
+FlowPay monitors status via Razorpay Webhooks:
 
-If payment is pending, it automatically sends reminders:
+- **Full payment** → receipt emailed to client + owner summary
+- **Partial payment** → balance notification emailed + sheet updated
 
-Day 3 — polite reminder  
-Day 7 — firmer reminder  
-Day 14 — final notice
+If payment is pending, the **background scheduler** sends reminders:
 
----
+| Day | Level | Tone |
+|---|---|---|
+| Day 3 | Level 1 | Polite nudge |
+| Day 7 | Level 2 | Firm reminder |
+| Day 14 | Level 3 | Final notice |
 
-### Step 6 — Payment Received
+### Step 6 — Completed
 
-Once the payment arrives:
+Once paid:
+- ✅ Google Sheet updated to **"paid"**
+- ✅ Client receives a payment receipt
+- ✅ Business owner receives a summary email
 
-• Google Sheet is updated  
-• Client receives a receipt  
-• Founder gets a payment summary  
-
-From **one instruction to money collected.**
-
----
-
-# Why This Matters
-
-Small businesses operate with messy tools:
-
-• Google Sheets  
-• WhatsApp  
-• Razorpay  
-• Email  
-
-FlowPay connects these tools and turns them into an **automated workflow system.**
-
-Instead of dashboards and forms, businesses **just describe what they want done.**
+From **one instruction → money collected → records updated.**
 
 ---
 
-# Tech Stack
+## Why This Matters
 
-Frontend
-Next.js interface where users type instructions and view task status.
+Small businesses operate with fragmented tools:
 
-Backend
-Python + FastAPI + LangGraph
+- Google Sheets for tracking
+- Razorpay for payment links
+- Gmail for follow-ups
+- WhatsApp for reminders
 
-LLM
-Gemini — used to interpret tasks and decide which tools to call.
+FlowPay **connects these tools** and orchestrates them into a **single automated workflow.**
 
-Integrations
-
-• Google Sheets — contacts and payment records  
-• Razorpay — payment links and status  
-• Email provider — payment links, reminders, receipts  
-
-FlowPay orchestrates these tools into a **single automated workflow.**
+Instead of dashboards and manual processes, businesses **just describe what they want done.**
 
 ---
 
-# Why It Fits This Hackathon
+## Tech Stack
 
-This hackathon asks for systems that **take action and complete workflows.**
+| Layer | Technology |
+|---|---|
+| **Frontend** | Next.js 16, React 19, Tailwind CSS 4 |
+| **Backend** | Python 3.12, FastAPI, Uvicorn |
+| **AI Agent** | LangGraph + LangChain + Gemini 2.5 Flash |
+| **Agent Memory** | SQLite via LangGraph Checkpointing |
+| **CRM** | Google Sheets (via Service Account + gspread) |
+| **Payments** | Razorpay Payment Links API (test mode) |
+| **Emails** | SMTP (Gmail) with branded HTML templates |
+| **Reminders** | APScheduler (background hourly job) |
+| **Streaming** | Server-Sent Events (SSE) for real-time UI |
 
-FlowPay is not a chatbot.
+### Agent Toolkit (10 tools)
 
-It is an **agent that executes real work**:
+The LangGraph agent has access to these tools and decides which to invoke:
 
-instruction → tools → workflow → result.
+| Tool | Purpose |
+|---|---|
+| `lookup_contact` | Search CRM by name |
+| `update_contact_email` | Add or update a contact's email |
+| `add_contact` | Insert a new contact |
+| `get_all_contacts` | List all contacts |
+| `create_payment_link` | Create Razorpay link + save to sheet + email invoice |
+| `get_all_payments` | Retrieve all payment records |
+| `find_payments_by_email` | Look up payments for a specific customer |
+| `cancel_payment_link` | Cancel an active Razorpay link |
+| `sync_payment_link` | Poll Razorpay for latest status and update sheet |
+| `send_reminder_email` | Trigger a reminder email at a specified urgency level |
+
+---
+
+## Why It Fits This Hackathon
+
+This hackathon asks for systems that **take action and complete real workflows.**
+
+FlowPay is not a chatbot. It is an **agent that executes real work:**
+
+```
+instruction → tools → workflow → result
+```
 
 The output isn't text.
-
 The output is **a payment successfully collected.**
 
 ---
 
-# Vision
+## Vision
 
 Today FlowPay handles payment collection.
 
-In the future it could become an **AI back-office for small businesses**:
+In the future, it could become an **AI back-office for small businesses:**
 
-• overdue payment recovery  
-• subscription billing automation  
-• revenue analytics  
-• automated bookkeeping  
-• WhatsApp payment follow-ups  
+- Overdue payment recovery
+- Subscription billing automation
+- Revenue analytics and cash-flow forecasting
+- Automated bookkeeping and reconciliation
+- WhatsApp payment follow-ups
 
 FlowPay could eventually manage **the entire revenue operations layer** for small businesses.
 
 ---
 
-# Closing Line
+## Closing Line
 
 FlowPay turns payment collection into a single sentence.
 
-Instead of chasing payments manually,
+Instead of chasing payments manually, you just say:
 
-you just say:
-
-> “Collect ₹1,500 from Mohit.”
+> *"Collect ₹5,000 from Mohit."*
 
 And FlowPay replies:
 
-**“It’s handled.”**
+**"It's handled."**
